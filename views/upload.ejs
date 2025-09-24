@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zxx" class="js">
+<!-- Mirrored from dashlite.net/demo1/components/forms/form-upload.html by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 07 May 2025 07:45:04 GMT -->
+<!-- Added by HTTrack -->
+<meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+
+<head>
+    <meta charset="utf-8">
+    <meta name="author" content="Softnio">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description"
+        content="A powerful and conceptual apps base dashboard template that especially build for developers and programmers.">
+    <link rel="shortcut icon" href="../../images/favicon.png">
+    <title>Form Upload - General | DashLite Admin Template</title>
+    <link rel="stylesheet" href="../../assets/css/dashlitee1e3.css?ver=3.2.4">
+    <link id="skin-default" rel="stylesheet" href="../../assets/css/themee1e3.css?ver=3.2.4">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-91615293-4"></script>
+    <script>window.dataLayer = window.dataLayer || []; function gtag() { dataLayer.push(arguments); } gtag('js', new Date()); gtag('config', 'UA-91615293-4');</script>
+</head>
+
+<body class="nk-body bg-lighter npc-general has-sidebar ">
+    <div class="nk-app-root">
+        <div class="nk-main ">
+            <%- include('sidebar.ejs') -%>
+                <div class="nk-wrap ">
+                    <%- include('header.ejs')-%>
+                        <div class="nk-content ">
+                            <div class="container-fluid">
+                                <div class="nk-content-inner">
+                                    <div class="nk-content-body">
+                                        <div class="components-preview wide-md mx-auto">
+
+                                            <div class="nk-block nk-block-lg">
+                                                <div class="nk-block-head">
+                                                    <div class="nk-block-head-content">
+
+                                                    </div>
+                                                </div>
+                                                <div class="card card-bordered card-preview">
+                                                    <div class="card-inner">
+                                                        <div class="preview-block">
+                                                            <!-- Excel Upload Section -->
+                                                            <div id="excel-upload-section" class="mt-3">
+                                                                <div
+                                                                    class="d-flex justify-content-between align-items-center mb-2">
+                                                                    <label class="form-label mb-0">Upload Excel</label>
+                                                                    <!-- Submit button at top -->
+                                                                    <button class="btn btn-primary btn"
+                                                                        id="submitBtnBottom">
+                                                                        <i
+                                                                            class="icon-base bx bx-check-circle icon-sm me-sm-1"></i>
+                                                                        <span class="align-middle">Submit</span>
+                                                                    </button>
+                                                                </div>
+
+                                                                <input type="file" id="excel-upload-input"
+                                                                    accept=".xlsx, .xls, .csv" class="form-control">
+
+                                                                <!-- Row Count -->
+                                                                <div id="excel-row-count"
+                                                                    class="mt-2 text-muted small d-none"></div>
+
+                                                                <!-- Preview -->
+                                                                <div id="excel-preview-wrapper" class="mt-3 d-none">
+                                                                    <h6>Excel Preview:</h6>
+                                                                    <div class="table-responsive">
+                                                                        <table id="excel-preview-table"
+                                                                            class="table table-bordered table-sm">
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Template download -->
+                                                                <!-- <a href="/static/visitor-template1.xlsx" download
+                                                                    class="btn btn-outline-primary mt-2 download-template">
+                                                                    <em class="icon ni ni-download-cloud"></em> Download
+                                                                    Template
+                                                                </a> -->
+                                                            </div>
+
+                                                            <!-- (Optional) Keep submit button at bottom too -->
+                                                            <!-- <div class="col-12 d-flex justify-content-end mt-3">
+                                                                <button class="btn btn-primary" id="submitBtnBottom">
+                                                                    <i
+                                                                        class="icon-base bx bx-check-circle icon-sm me-sm-2"></i>
+                                                                    <span class="align-middle">Submit</span>
+                                                                </button>
+                                                            </div> -->
+
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <%- include('footer.ejs')-%>
+                </div>
+        </div>
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
+    </div>
+
+    <script src="../../assets/js/bundlee1e3.js?ver=3.2.4"></script>
+    <script src="../../assets/js/scriptse1e3.js?ver=3.2.4"></script>
+    <script src="../../assets/js/demo-settingse1e3.js?ver=3.2.4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Preview Excel
+            $('#excel-upload-input').on('change', function (e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                console.log('Selected file:', file);
+                $('.download-template').addClass('d-none');
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        console.log('Excel parsed data:', jsonData);
+
+                        if (!jsonData.length || jsonData[0].length === 0) {
+                            $('#excel-preview-wrapper').addClass('d-none');
+                            $('#excel-row-count').addClass('d-none');
+                            alert('Excel file is empty or missing headers.');
+                            return;
+                        }
+
+                        // Build table
+                        let tableHtml = '<thead><tr>';
+                        jsonData[0].forEach(header => {
+                            tableHtml += `<th>${header}</th>`;
+                        });
+                        tableHtml += '</tr></thead><tbody>';
+
+                        jsonData.slice(1).forEach(row => {
+                            tableHtml += '<tr>';
+                            row.forEach(cell => {
+                                tableHtml += `<td>${cell ?? ''}</td>`;
+                            });
+                            tableHtml += '</tr>';
+                        });
+                        tableHtml += '</tbody>';
+
+                        $('#excel-preview-table').html(tableHtml);
+                        $('#excel-preview-wrapper').removeClass('d-none');
+
+                        // Show row count (excluding header row)
+                        const rowCount = jsonData.length - 1;
+                        $('#excel-row-count')
+                            .removeClass('d-none')
+                            .text(`Total Rows: ${rowCount}`);
+
+                    } catch (err) {
+                        console.error('Excel parsing error:', err);
+                        alert('Error reading Excel file. Please ensure it is a valid .xlsx or .xls file.');
+                    }
+                };
+
+                reader.readAsArrayBuffer(file);
+            });
+
+            // Submit handler (both buttons)
+            $('#submitBtnTop, #submitBtnBottom').on('click', function (e) {
+                e.preventDefault();
+
+                const excelFile = $('#excel-upload-input')[0].files[0];
+                if (!excelFile) {
+                    showToast("Validation Error", "Please select a file before submitting.", "text-warning");
+                    return;
+                }
+
+                const allowedExt = /\.(xlsx|xls|csv)$/i;
+                const maxSize = 5 * 1024 * 1024; // 5MB
+
+                if (!allowedExt.test(excelFile.name)) {
+                    showToast("Validation Error", "Only Excel/CSV files are allowed.", "text-warning");
+                    return;
+                }
+
+                if (excelFile.size > maxSize) {
+                    showToast("Validation Error", "File size exceeds 5MB limit.", "text-warning");
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('file', excelFile);
+                swal.fire({
+                    title: 'uploading excel...',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        swal.showLoading();
+                    }
+                })
+
+                $.ajax({
+                    type: 'POST',
+                    url: `/agent/upload`,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (res) {
+
+                        swal.fire({
+                            icon: 'success',
+                            title: 'sucess!',
+                            text: 'Excel uploaded successfully',
+                            showConfirmButton: false,
+                            timer: 2000
+                        }).then(() => {
+                            window.location.reload()
+                        })
+                    },
+                    error: function (xhr) {
+                        const message = xhr.responseJSON?.message || "Excel upload failed.";
+                        swal.fire({
+                            icon: 'error',
+                            title: 'error!',
+                            text: xhr.responseJSON.message || 'error while creating user',
+                            showConfirmButton: true
+                        })
+                    }
+                });
+            });
+
+            function showToast(title, body, titleClass) {
+                const toastHtml = `
+        <div class="toast align-items-center text-bg-light border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+          <div class="toast-header">
+            <strong class="me-auto ${titleClass}">${title}</strong>
+            <small class="text-muted">Now</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+          <div class="toast-body">${body}</div>
+        </div>`;
+
+                const $toast = $(toastHtml);
+                $('.toast-container').append($toast);
+                new bootstrap.Toast($toast[0]).show();
+            }
+        });
+
+    </script>
+</body>
+
+</html>

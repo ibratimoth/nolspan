@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zxx" class="js">
+<!-- Mirrored from dashlite.net/demo1/components/forms/form-upload.html by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 07 May 2025 07:45:04 GMT -->
+<!-- Added by HTTrack -->
+<meta http-equiv="content-type" content="text/html;charset=UTF-8" /><!-- /Added by HTTrack -->
+
+<head>
+    <meta charset="utf-8">
+    <meta name="author" content="Softnio">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description"
+        content="A powerful and conceptual apps base dashboard template that especially build for developers and programmers.">
+    <link rel="shortcut icon" href="../../images/favicon.png">
+    <title>Nolspan | Report</title>
+    <link rel="stylesheet" href="../../assets/css/dashlitee1e3.css?ver=3.2.4">
+    <link id="skin-default" rel="stylesheet" href="../../assets/css/themee1e3.css?ver=3.2.4">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-91615293-4"></script>
+    <script>window.dataLayer = window.dataLayer || []; function gtag() { dataLayer.push(arguments); } gtag('js', new Date()); gtag('config', 'UA-91615293-4');</script>
+</head>
+
+<body class="nk-body bg-lighter npc-general has-sidebar ">
+    <div class="nk-app-root">
+        <div class="nk-main ">
+            <%- include('sidebar.ejs') -%>
+                <div class="nk-wrap ">
+                    <%- include('header.ejs')-%>
+                        <div class="nk-content ">
+                            <div class="container-fluid">
+                                <div class="nk-content-inner">
+                                    <div class="nk-content-body">
+                                        <div class="nk-block-head nk-block-head-sm">
+                                            <div class="nk-block-between">
+                                                <div class="nk-block-head-content">
+                                                    <h3 class="nk-block-title page-title">NOLSPAN</h3>
+                                                    <div class="nk-block-des text-soft">
+                                                        <p>Sales force</p>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="nk-block nk-block-lg">
+                                            <div class="card card-bordered card-preview mb-3">
+                                                <div class="card-inner">
+                                                    <div class="preview-block">
+                                                        <div class="row gy-4">
+                                                            <div class="col-md-4">
+                                                                <div class="form-group">
+                                                                    <label class="form-label" for="agent">Agent
+                                                                        name</label>
+                                                                    <div class="form-control-wrap">
+                                                                        <div class="form-control-select">
+                                                                            <select class="form-control required"
+                                                                                data-msg="Required" id="agent"
+                                                                                name="agent" required>
+                                                                                <option value="">---Select
+                                                                                    agent---</option>
+                                                                                <%agents.forEach((agent)=> {
+                                                                                    %>
+                                                                                    <option
+                                                                                        value="<%= agent.branch_id %>">
+                                                                                        <%= agent.name %>
+                                                                                    </option>
+                                                                                    <% }) %>
+                                                                                        <!-- Options will be inserted dynamically -->
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="col-md-4">
+                                                                <div class="form-group">
+                                                                    <label class="form-label"
+                                                                        for="period">Period</label>
+                                                                    <div class="form-control-wrap">
+                                                                        <div class="form-control-select">
+                                                                            <select class="form-control required"
+                                                                                data-msg="Required" id="period"
+                                                                                name="period" required>
+                                                                                <option value="">---Select
+                                                                                    period---</option>
+                                                                                <option value="this_week">weekly
+                                                                                </option>
+                                                                                <option value="this_month">mothly
+                                                                                </option>
+                                                                                <option value="this_year">annually
+                                                                                </option>
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="col-md-4">
+                                                                <div class="form-group"><label class="form-label"
+                                                                        for="price">transfer from</label>
+                                                                    <div class="form-control-wrap"> <input type="date"
+                                                                            class="form-control" id="transferFrom"
+                                                                            name="issuedFrom" placeholder="YYYY-MM-DD">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <div class="form-group">
+                                                                    <label class="form-label" for="issueTo">transfer
+                                                                        to</label>
+                                                                    <div class="form-control-wrap">
+                                                                        <input type="date" class="form-control"
+                                                                            id="transferTo" placeholder="yyyy-mm-dd">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-12">
+                                                                <div class="form-group">
+                                                                    <button type="button" id="filterButton"
+                                                                        class="btn btn-primary mt-2">Apply
+                                                                        Filter</button>
+                                                                </div>
+                                                            </div>
+                                                            <div class="js-preloader" style="display: none;">
+                                                                <div class="loading-animation tri-ring"></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Your Table -->
+                                            <div class="card card-bordered mb-3">
+                                                <div class="card-inner">
+                                                    <h5>Total Served Amount: <span id="totalServedAmount">0</span></h5>
+                                                </div>
+                                            </div>
+                                            <div class="card card-bordered card-preview">
+                                                <div class="card-inner">
+                                                    <table id="requestsTable" class="datatable-init-export nowrap table"
+                                                        data-export-title="Export">
+                                                        <thead>
+                                                            <tr class="nk-tb-item nk-tb-head">
+                                                                <th class="nk-tb-col"><span class="sub-text">SNO</span>
+                                                                </th>
+                                                                <th class="nk-tb-col"><span
+                                                                        class="sub-text">Transaction</span></th>
+                                                                <th class="nk-tb-col"><span class="sub-text">Balance
+                                                                        Before</span></th>
+                                                                <th class="nk-tb-col"><span class="sub-text">Balance
+                                                                        After</span></th>
+                                                                <th class="nk-tb-col"><span class="sub-text">Served
+                                                                        Amount</span></th>
+                                                                <th class="nk-tb-col"><span class="sub-text">Transfer
+                                                                        Date</span></th>
+                                                                <th class="nk-tb-col"><span
+                                                                        class="sub-text">Status</span></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <%- include('footer.ejs')-%>
+                </div>
+        </div>
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;"></div>
+    </div>
+
+    <script src="../../assets/js/bundlee1e3.js?ver=3.2.4"></script>
+    <script src="../../assets/js/scriptse1e3.js?ver=3.2.4"></script>
+    <script src="../../assets/js/demo-settingse1e3.js?ver=3.2.4"></script>
+    <script src="../../assets/js/libs/datatable-btnse1e3.js?ver=3.2.4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+
+        $(document).ready(function () {
+            $(".date-picker").flatpickr({
+                dateFormat: "Y-m-d" // This is 2025-07-06 format
+            });
+        });
+
+        $(document).ready(function () {
+            const $period = $('#period');
+            const $transferFrom = $('#transferFrom');
+
+            $transferFrom.on('change', function () {
+                if ($(this).val()) {
+                    // Disable period dropdown if a date is selected
+                    $period.prop('disabled', true);
+                } else {
+                    // Enable period dropdown if date is cleared
+                    $period.prop('disabled', false);
+                }
+            });
+
+            // Optional: If you also want to disable transferFrom when period is selected
+            $period.on('change', function () {
+                if ($(this).val()) {
+                    $('#transferFrom').prop('disabled', true);
+                    $('#transferTo').prop('disabled', true);
+                } else {
+                    $('#transferFrom').prop('disabled', false);
+                    $('#transferTo').prop('disabled', false);
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            if (!$.fn.DataTable.isDataTable('#requestsTable')) {
+                $('#requestsTable').DataTable({
+                    pageLength: 10,
+                    responsive: true,
+                    autoWidth: false,
+                });
+            }
+        });
+
+        $(document).ready(function () {
+            let requestsTable;
+
+            // Helper: format date as DD/MM/YYYY
+            function formatDate(dateStr) {
+                if (!dateStr) return 'N/A';
+                const date = new Date(dateStr);
+                return isNaN(date.getTime())
+                    ? 'N/A'
+                    : date.toLocaleDateString('en-GB', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                    });
+            }
+
+            // Helper: get status badge
+            function getStatusBadge(statusId) {
+                switch (String(statusId)) {
+                    case '1': return '<span class="badge text-success">Active</span>';
+                    case '2': return '<span class="badge text-warning">Expired</span>';
+                    case '3': return '<span class="badge text-danger">Canceled</span>';
+                    case '4': return '<span class="badge text-warning">Inactive</span>';
+                    case '5': return '<span class="badge text-secondary">Pending</span>';
+                    case '6': return '<span class="badge text-danger">CancelFormer</span>';
+                    case '7': return '<span class="badge text-warning">Expired</span>';
+                    default: return '<span class="badge text-success">Active</span>';
+                }
+            }
+
+            // Initialize or Re-init DataTable
+            // function initDataTable() {
+            //     requestsTable = $('#requestsTable').DataTable({
+            //         destroy: true,   // ✅ allow safe reinit
+            //         paging: true,
+            //         ordering: true,
+            //         info: true,
+            //         searching: true,
+            //         responsive: true,
+            //         dom: 'Bfrtip',
+            //         buttons: [
+            //             { extend: 'copy', text: 'Copy' },
+            //             { extend: 'csv', text: 'CSV' },
+            //             { extend: 'excel', text: 'Excel' },
+            //             { extend: 'pdf', text: 'PDF' },
+            //             { extend: 'print', text: 'Print' }
+            //         ],
+            //         columnDefs: [
+            //             { orderable: false, searchable: false, targets: 0 },
+            //             { orderable: false, searchable: false, targets: 8 }
+            //         ]
+            //     });
+            // }
+
+            let table = $('#requestsTable').DataTable({
+                paging: true,
+                searching: true,
+                ordering: true,
+                destroy: true, // allows safe re-init
+                pageLength: 10,
+                responsive: true,
+                dom: 'Bfrtip', // needed for buttons
+                buttons: [
+                    { extend: 'copy', text: 'Copy' },
+                    { extend: 'csv', text: 'CSV' },
+                    { extend: 'excel', text: 'Excel' },
+                    { extend: 'pdf', text: 'PDF' },
+                    { extend: 'print', text: 'Print' }
+                ],
+                columnDefs: [
+                    { orderable: false, searchable: false, targets: 0 } // disable sorting/search on SNO
+                ]
+            });
+            // Fetch + populate with DataTable API
+            function fetchAndPopulateTable(filters) {
+                let queryString = Object.keys(filters)
+                    .filter(key => filters[key])
+                    .map(key => `${key}=${encodeURIComponent(filters[key])}`)
+                    .join('&');
+
+                const filterRoute = `/agent/agents?${queryString}`;
+
+                swal.fire({
+                    title: 'filtering...',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        swal.showLoading();
+                    }
+                });
+
+                $.ajax({
+                    url: filterRoute,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function (response) {
+                        console.log("Fetched:", response);
+
+                        swal.fire({
+                            icon: 'success',
+                            title: 'success!',
+                            text: response.data.message || 'filtered successfully',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+
+                        // Reset total amount
+                        if (response?.data?.totalServedAmount) {
+                            $('#totalServedAmount').text(
+                                Number(response.data.totalServedAmount).toLocaleString()
+                            );
+                        } else {
+                            $('#totalServedAmount').text('0');
+                        }
+
+                        // Use DataTable API to clear + repopulate
+                        table.clear();
+
+                        let index = 0;
+                        if (Array.isArray(response?.data?.data) && response.data.data.length > 0) {
+                            response.data.data.forEach(agent => {
+                                if (Array.isArray(agent.transactions) && agent.transactions.length > 0) {
+                                    agent.transactions.forEach(tx => {
+                                        index++;
+                                        table.row.add([
+                                            index,
+                                            tx.transaction_id || 'N/A',
+                                            tx.source_balance_before || 'N/A',
+                                            tx.source_balance_after || 'N/A',
+                                            tx.served_amount || 'N/A',
+                                            formatDate(tx.transfer_date),
+                                            getStatusBadge(tx.LicenceStatusId)
+                                        ]);
+                                    });
+                                }
+                            });
+                        }
+
+                        // Draw table with new data
+                        table.draw();
+                    },
+                    error: function (xhr) {
+                        console.error("Error fetching filtered data:", xhr);
+                        $('#totalServedAmount').text('0');
+                        swal.fire({
+                            icon: 'error',
+                            title: 'error!',
+                            text: xhr.responseJSON?.message || 'error while fetching data',
+                            showConfirmButton: true
+                        });
+
+                        // Clear DataTable if error
+                        table.clear().draw();
+                    }
+                });
+            }
+            // Filter button click
+            $('#filterButton').on('click', function () {
+                const filters = {
+                    branch_id: $('#agent').val(),
+                    dateRange: $('#period').val(),
+                    fromDate: $('#transferFrom').val(),
+                    toDate: $('#transferTo').val()
+                };
+
+                fetchAndPopulateTable(filters);
+            });
+
+            // Initial load
+            //fetchAndPopulateTable({});
+        });
+
+    </script>
+</body>
+
+</html>
