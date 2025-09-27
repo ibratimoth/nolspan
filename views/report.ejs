@@ -80,6 +80,8 @@
                                                                                 name="period" required>
                                                                                 <option value="">---Select
                                                                                     period---</option>
+                                                                                <option value="today">today
+                                                                                </option>
                                                                                 <option value="this_week">weekly
                                                                                 </option>
                                                                                 <option value="this_month">mothly
@@ -133,24 +135,31 @@
                                             </div>
                                             <div class="card card-bordered card-preview">
                                                 <div class="card-inner">
+                                                    <div id="downloadReportWrapper" class="mb-3 text-end"
+                                                        style="display:none;">
+                                                        <button id="downloadReport" class="btn btn-primary">
+                                                            <em class="icon ni ni-download"></em> Download Report
+                                                        </button>
+                                                    </div>
+
                                                     <table id="requestsTable" class="datatable-init-export nowrap table"
                                                         data-export-title="Export">
                                                         <thead>
                                                             <tr class="nk-tb-item nk-tb-head">
                                                                 <th class="nk-tb-col"><span class="sub-text">SNO</span>
                                                                 </th>
-                                                                <th class="nk-tb-col"><span
-                                                                        class="sub-text">Transaction</span></th>
-                                                                <th class="nk-tb-col"><span class="sub-text">Balance
-                                                                        Before</span></th>
-                                                                <th class="nk-tb-col"><span class="sub-text">Balance
-                                                                        After</span></th>
-                                                                <th class="nk-tb-col"><span class="sub-text">Served
-                                                                        Amount</span></th>
-                                                                <th class="nk-tb-col"><span class="sub-text">Transfer
+                                                                <th class="nk-tb-col"><span class="sub-text">Transaction
                                                                         Date</span></th>
-                                                                <th class="nk-tb-col"><span
-                                                                        class="sub-text">Status</span></th>
+                                                                <th class="nk-tb-col"><span class="sub-text">Transaction
+                                                                        ID</span></th>
+                                                                <th class="nk-tb-col"><span class="sub-text">
+                                                                        Debit</span></th>
+                                                                <th class="nk-tb-col"><span class="sub-text">
+                                                                        Credit</span></th>
+                                                                <th class="nk-tb-col"><span class="sub-text">Running
+                                                                        Balance</span></th>
+                                                                <th class="nk-tb-col"><span class="sub-text">Trans for
+                                                                        Customer</span></th>
                                                             </tr>
                                                         </thead>
                                                         <tbody></tbody>
@@ -176,6 +185,8 @@
     <script src="../../assets/js/libs/datatable-btnse1e3.js?ver=3.2.4"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
     <script>
 
@@ -222,8 +233,6 @@
         });
 
         $(document).ready(function () {
-            let requestsTable;
-
             // Helper: format date as DD/MM/YYYY
             function formatDate(dateStr) {
                 if (!dateStr) return 'N/A';
@@ -237,44 +246,7 @@
                     });
             }
 
-            // Helper: get status badge
-            function getStatusBadge(statusId) {
-                switch (String(statusId)) {
-                    case '1': return '<span class="badge text-success">Active</span>';
-                    case '2': return '<span class="badge text-warning">Expired</span>';
-                    case '3': return '<span class="badge text-danger">Canceled</span>';
-                    case '4': return '<span class="badge text-warning">Inactive</span>';
-                    case '5': return '<span class="badge text-secondary">Pending</span>';
-                    case '6': return '<span class="badge text-danger">CancelFormer</span>';
-                    case '7': return '<span class="badge text-warning">Expired</span>';
-                    default: return '<span class="badge text-success">Active</span>';
-                }
-            }
-
-            // Initialize or Re-init DataTable
-            // function initDataTable() {
-            //     requestsTable = $('#requestsTable').DataTable({
-            //         destroy: true,   // ✅ allow safe reinit
-            //         paging: true,
-            //         ordering: true,
-            //         info: true,
-            //         searching: true,
-            //         responsive: true,
-            //         dom: 'Bfrtip',
-            //         buttons: [
-            //             { extend: 'copy', text: 'Copy' },
-            //             { extend: 'csv', text: 'CSV' },
-            //             { extend: 'excel', text: 'Excel' },
-            //             { extend: 'pdf', text: 'PDF' },
-            //             { extend: 'print', text: 'Print' }
-            //         ],
-            //         columnDefs: [
-            //             { orderable: false, searchable: false, targets: 0 },
-            //             { orderable: false, searchable: false, targets: 8 }
-            //         ]
-            //     });
-            // }
-
+            // Initialize DataTable
             let table = $('#requestsTable').DataTable({
                 paging: true,
                 searching: true,
@@ -294,6 +266,9 @@
                     { orderable: false, searchable: false, targets: 0 } // disable sorting/search on SNO
                 ]
             });
+
+            let lastResponse = null; // store API response for PDF use
+
             // Fetch + populate with DataTable API
             function fetchAndPopulateTable(filters) {
                 let queryString = Object.keys(filters)
@@ -304,7 +279,7 @@
                 const filterRoute = `/agent/agents?${queryString}`;
 
                 swal.fire({
-                    title: 'filtering...',
+                    title: 'Filtering...',
                     allowOutsideClick: false,
                     allowEscapeKey: false,
                     didOpen: () => {
@@ -318,57 +293,73 @@
                     dataType: 'json',
                     success: function (response) {
                         console.log("Fetched:", response);
+                        lastResponse = response; // save response for download
 
-                        swal.fire({
-                            icon: 'success',
-                            title: 'success!',
-                            text: response.data.message || 'filtered successfully',
-                            showConfirmButton: false,
-                            timer: 2000
-                        });
+                        if (response?.data?.data && response.data.data.length > 0) {
+                            swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: response.data.message || 'Filtered successfully',
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                        } else {
+                            swal.fire({
+                                icon: 'warning',
+                                title: 'warning!',
+                                text: response.data.message || 'No data found',
+                                showConfirmButton: true,
+                            });
+                        }
+
 
                         // Reset total amount
-                        if (response?.data?.totalServedAmount) {
+                        if (response?.data?.statementDetails?.total_credit) {
                             $('#totalServedAmount').text(
-                                Number(response.data.totalServedAmount).toLocaleString()
+                                Number(response.data.statementDetails.total_credit).toLocaleString()
                             );
                         } else {
                             $('#totalServedAmount').text('0');
                         }
 
-                        // Use DataTable API to clear + repopulate
+                        // Clear DataTable
                         table.clear();
 
                         let index = 0;
                         if (Array.isArray(response?.data?.data) && response.data.data.length > 0) {
                             response.data.data.forEach(agent => {
+                                console.log('Agent:', agent.agent_name);
                                 if (Array.isArray(agent.transactions) && agent.transactions.length > 0) {
                                     agent.transactions.forEach(tx => {
                                         index++;
                                         table.row.add([
                                             index,
+                                            tx.transfer_date || 'N/A',
                                             tx.transaction_id || 'N/A',
-                                            tx.source_balance_before || 'N/A',
-                                            tx.source_balance_after || 'N/A',
-                                            tx.served_amount || 'N/A',
-                                            formatDate(tx.transfer_date),
-                                            getStatusBadge(tx.LicenceStatusId)
+                                            tx.debit ? Number(tx.debit).toLocaleString() : 'N/A',
+                                            tx.credit ? Number(tx.credit).toLocaleString() : 'N/A',
+                                            tx.source_balance_after ? Number(tx.source_balance_after).toLocaleString() : 'N/A',
+                                            tx.destination_id || 'N/A',
                                         ]);
                                     });
                                 }
                             });
                         }
 
-                        // Draw table with new data
+                        // Redraw DataTable
                         table.draw();
+                        $('#downloadReportWrapper').show();
+
                     },
                     error: function (xhr) {
                         console.error("Error fetching filtered data:", xhr);
                         $('#totalServedAmount').text('0');
+                        $('#downloadReportWrapper').hide();
+
                         swal.fire({
                             icon: 'error',
-                            title: 'error!',
-                            text: xhr.responseJSON?.message || 'error while fetching data',
+                            title: 'Error!',
+                            text: xhr.responseJSON?.message || 'Error while fetching data',
                             showConfirmButton: true
                         });
 
@@ -377,6 +368,7 @@
                     }
                 });
             }
+
             // Filter button click
             $('#filterButton').on('click', function () {
                 const filters = {
@@ -389,9 +381,111 @@
                 fetchAndPopulateTable(filters);
             });
 
-            // Initial load
-            //fetchAndPopulateTable({});
+            // Download Report button
+            $('#downloadReport').on('click', function () {
+                if (!lastResponse) return;
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('landscape', 'pt', 'a4'); // ✅ landscape
+
+                const details = lastResponse?.data?.statementDetails || {};
+                const agent = (Array.isArray(lastResponse?.data?.data) && lastResponse.data.data.length > 0)
+                    ? lastResponse.data.data[0]
+                    : {};
+                const agentName = agent.agent_name || 'N/A';
+                const agentId = agent.branch_id || 'N/A';
+
+                // Format values
+                const totalCredit = details.total_credit ? Number(details.total_credit).toLocaleString() : '0';
+                const totalDebit = details.total_debit ? Number(details.total_debit).toLocaleString() : '0';
+                const totalTransactions = details.total_transactions || '0';
+                const totalCustomers = details.total_customers_served || '0';
+                const reportDate = details.reportGeneratedOn
+                    ? new Date(details.reportGeneratedOn).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+                    : new Date().toLocaleDateString();
+                const periodFrom = details.period?.startDate
+                    ? new Date(details.period.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+                    : '-';
+                const periodTo = details.period?.endDate
+                    ? new Date(details.period.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
+                    : '-';
+
+                // ============================
+                // HEADER SECTION
+                // ============================
+                doc.setFontSize(14);
+                doc.text("Statement For", 40, 40);
+
+                doc.setFontSize(16);
+                doc.setFont("helvetica", "bold");
+                doc.text(`${agentName} (${agentId})`, 40, 65);
+
+                doc.setFontSize(13);
+                doc.setFont("helvetica", "bold");
+                doc.text("Statement Details", 40, 105);
+
+                doc.setFontSize(16);
+                doc.setFont("helvetica", "bold");
+                doc.text(`${agentName} (${agentId})`, 40, 65);
+
+                doc.setFontSize(13);
+                doc.setFont("helvetica", "bold");
+                doc.text("Statement Details", 40, 105);
+
+                // ===== DETAILS =====
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "normal"); // ✅ switch back to normal
+                let y = 130;
+                doc.text(`Date: ${reportDate}`, 40, y); y += 20;
+                doc.text(`Period: ${periodFrom} to ${periodTo}`, 40, y); y += 20;
+                doc.text(`Customers Attended: ${totalCustomers}`, 40, y); y += 20;
+                doc.text(`Total Transactions: ${totalTransactions}`, 40, y); y += 20;
+                doc.text(`Total Debit: ${totalDebit}`, 40, y); y += 20;
+                doc.text(`Total Credit: ${totalCredit}`, 40, y);
+
+                // ============================
+                // TRANSACTIONS TABLE
+                // ============================
+                const data = table.rows({ search: 'applied' }).data().toArray();
+
+                doc.autoTable({
+                    head: [['SNO', 'Transaction Date', 'Transaction ID', 'Debit', 'Credit', 'Running Balance', 'Trans for Customer']],
+                    body: data,
+                    startY: y + 30,
+                    theme: 'grid',
+                    styles: {
+                        fontSize: 11,
+                        cellPadding: 5,
+                        textColor: [0, 0, 0],      // ✅ black text
+                        lineColor: [0, 0, 0],      // ✅ black lines
+                        lineWidth: 0.25
+                    },
+                    headStyles: {
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],      // ✅ black text in header
+                        lineColor: [0, 0, 0],      // ✅ black header borders
+                        lineWidth: 0.5
+                    },
+                    bodyStyles: {
+                        lineColor: [0, 0, 0],
+                        lineWidth: 0.25,
+                        textColor: [0, 0, 0]       // ✅ ensure black text for body
+                    },
+                    margin: { left: 40, right: 40 },
+                    tableWidth: 'auto',
+                });
+
+
+                // ============================
+                // SAVE FILE
+                // ============================
+                let safeAgentName = agentName.replace(/[^a-z0-9]/gi, '_');
+                doc.save(`${safeAgentName}_statement_report.pdf`);
+            });
+
         });
+
+
 
     </script>
 </body>
