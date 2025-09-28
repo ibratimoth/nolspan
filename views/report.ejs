@@ -328,16 +328,20 @@
                         let index = 0;
                         if (Array.isArray(response?.data?.data) && response.data.data.length > 0) {
                             response.data.data.forEach(agent => {
-                                console.log('Agent:', agent.agent_name);
                                 if (Array.isArray(agent.transactions) && agent.transactions.length > 0) {
                                     agent.transactions.forEach(tx => {
+                                        console.log('Agent:', tx.credit);
                                         index++;
                                         table.row.add([
                                             index,
                                             tx.transfer_date || 'N/A',
                                             tx.transaction_id || 'N/A',
-                                            tx.debit ? Number(tx.debit).toLocaleString() : 'N/A',
-                                            tx.credit ? Number(tx.credit).toLocaleString() : 'N/A',
+                                            tx.debit === null || tx.debit === undefined
+                                                ? 'N/A'
+                                                : Number(tx.debit).toLocaleString(),
+                                            tx.credit === null || tx.credit === undefined
+                                                ? 'N/A'
+                                                : Number(tx.credit).toLocaleString(),
                                             tx.source_balance_after ? Number(tx.source_balance_after).toLocaleString() : 'N/A',
                                             tx.destination_id || 'N/A',
                                         ]);
@@ -437,7 +441,10 @@
                 doc.setFont("helvetica", "normal"); // ✅ switch back to normal
                 let y = 130;
                 doc.text(`Date: ${reportDate}`, 40, y); y += 20;
-                doc.text(`Period: ${periodFrom} to ${periodTo}`, 40, y); y += 20;
+                if (periodFrom !== '-' && periodTo !== '-') {
+                    doc.text(`Period: ${periodFrom} to ${periodTo}`, 40, y);
+                    y += 20;
+                }
                 doc.text(`Customers Attended: ${totalCustomers}`, 40, y); y += 20;
                 doc.text(`Total Transactions: ${totalTransactions}`, 40, y); y += 20;
                 doc.text(`Total Debit: ${totalDebit}`, 40, y); y += 20;
