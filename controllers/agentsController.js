@@ -32,7 +32,27 @@ class AgentController {
         };
     }
 
-    async makeApiRequest(method, endpoint, data = null) {
+    async makeApiRequest(method, endpoint, token, data = null) {
+        const config = {
+            method,
+            url: `${this.apiBaseUrl}${endpoint}`,
+            headers: this.getAuthHeaders(token),
+        };
+        logger.info(`url: ${JSON.stringify(config.url)}`);
+        logger.info(`Payload: ${JSON.stringify(data)}`);
+        if (data) {
+            config.data = data;
+        }
+
+        try {
+            const response = await axios(config);
+            return this.validateApiResponse(response);
+        } catch (error) {
+            throw this.handleApiError(error);
+        }
+    }
+
+    async makeAuthRequest(method, endpoint, data = null) {
         const config = {
             method,
             url: `${this.apiBaseUrl}${endpoint}`,
@@ -95,7 +115,7 @@ class AgentController {
 
             const data = { first_name, last_name, email, password };
 
-            const result = await this.makeApiRequest("post", this.endpoints.register, data);
+            const result = await this.makeAuthRequest("post", this.endpoints.register, data);
             logger.info(`User registered: ${JSON.stringify(result.data)}`);
 
             // Success → redirect to login with a success message
@@ -123,7 +143,7 @@ class AgentController {
             }
 
             const data = { email, password };
-            const result = await this.makeApiRequest("post", this.endpoints.login, data);
+            const result = await this.makeAuthRequest("post", this.endpoints.login, data);
             logger.info(`User logged in: ${JSON.stringify(result.data)}`);
 
             // Save session data
@@ -181,6 +201,7 @@ class AgentController {
             const result = await this.makeApiRequest(
                 'post',
                 '/upload',
+                req.cookies.accessToken,
                 formData,
                 {
                     headers: {
@@ -217,6 +238,7 @@ class AgentController {
             const result = await this.makeApiRequest(
                 'get',
                 this.endpoints.agents,
+                req.cookies.accessToken,
             );
 
             return res.render('report', { agents: result.data || [] });
@@ -259,6 +281,7 @@ class AgentController {
             const result = await this.makeApiRequest(
                 'get',
                 `${this.endpoints.filter}?${queryString}`,
+                req.cookies.accessToken,
             );
 
             return this.responseHandler.sendResponse(
