@@ -19,7 +19,9 @@ class AgentController {
         this.endpoints = {
             agent: '/upload',
             agents: '/upload/agents',
-            filter: '/upload'
+            filter: '/upload',
+            register: '/users/register',
+            login: '/users/login'
         }
     }
 
@@ -78,6 +80,83 @@ class AgentController {
             status: 500,
             message: 'An unexpected error occurred'
         };
+    }
+
+    async register(req, res) {
+        try {
+            const { first_name, last_name, email, password } = req.body;
+
+            if (!first_name || !last_name || !email || !password) {
+                return res.render("register", {
+                    error: "⚠️ All fields are required",
+                    success: null,
+                });
+            }
+
+            const data = { first_name, last_name, email, password };
+
+            const result = await this.makeApiRequest("post", this.endpoints.register, data);
+            logger.info(`User registered: ${JSON.stringify(result.data)}`);
+
+            // Success → redirect to login with a success message
+            return res.render("login", {
+                error: null,
+                success: "✅ User registered successfully. Please login.",
+            });
+        } catch (error) {
+            return res.render("register", {
+                error: error.message || "❌ Registration failed. Try again.",
+                success: null,
+            });
+        }
+    }
+
+    async login(req, res) {
+        try {
+            const { email, password } = req.body;
+
+            if (!email || !password) {
+                return res.render("login", {
+                    error: "⚠️ Email and password are required",
+                    success: null,
+                });
+            }
+
+            const data = { email, password };
+            const result = await this.makeApiRequest("post", this.endpoints.login, data);
+            logger.info(`User logged in: ${JSON.stringify(result.data)}`);
+
+            // Save session data
+            req.session.first_name = result.data.user.first_name;
+            req.session.email = result.data.user.email;
+            req.session.userId = result.data.user.id;
+
+            // Set auth cookie
+            const isProduction = process.env.NODE_ENV === "production";
+            res.cookie("accessToken", result.token, {
+                httpOnly: true,
+                secure: isProduction,
+                sameSite: "strict",
+                maxAge: 15 * 60 * 1000,
+            });
+
+            // On success → redirect to dashboard with success alert
+            // return res.render("upload", {
+            //     error: null,
+            //     success: `✅ Welcome back, ${result.data.user.first_name}!`,
+            //     user: result.data.user,
+            // });
+
+            return res.redirect('/agent/upload');
+
+        } catch (error) {
+            logger.error("Login error:", error);
+
+            return res.render("login", {
+                error: error.message || "❌ Invalid email or password",
+                success: null,
+            });
+        }
     }
 
     async uploadAgentsFromExcel(req, res) {
@@ -201,6 +280,23 @@ class AgentController {
                 false,
                 error.message
             );
+        }
+    }
+
+    async logout(req, res) {
+        if (req.session) {
+            req.session.destroy(err => {
+                if (err) {
+                    console.error('Error destroying session:', err);
+                }
+            });
+            res.clearCookie('accessToken');
+            res.clearCookie('nolspan.sid', {
+                path: '/',
+                httpOnly: true,
+                secure: false // true if HTTPS
+            });
+            return res.redirect('/');
         }
     }
 

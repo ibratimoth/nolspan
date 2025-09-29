@@ -254,6 +254,29 @@
             }
         });
 
+        $(document).ready(function () {
+            $('#logout-link').on('click', function (e) {
+                e.preventDefault();
+
+                console.log('reached')
+                $.ajax({
+                    type: 'POST',
+                    url: '/agent/logout',
+                    contentType: 'application/json',
+                    success: function (response) {
+                        window.location.href = '/'
+                    },
+                    error: function (xhr) {
+                        let message = "Request failed. Please try again.";
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        return;
+                    },
+                });
+            })
+        })
+
     </script>
 </body>
 
