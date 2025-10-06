@@ -127,12 +127,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <!-- Your Table -->
-                                            <div class="card card-bordered mb-3">
-                                                <div class="card-inner">
-                                                    <h5>Total Served Amount: <span id="totalServedAmount">0</span></h5>
-                                                </div>
-                                            </div>
+
                                             <div class="card card-bordered card-preview">
                                                 <div class="card-inner">
                                                     <div id="downloadReportWrapper" class="mb-3 text-end"
@@ -312,16 +307,6 @@
                             });
                         }
 
-
-                        // Reset total amount
-                        if (response?.data?.statementDetails?.total_credit) {
-                            $('#totalServedAmount').text(
-                                Number(response.data.statementDetails.total_credit).toLocaleString()
-                            );
-                        } else {
-                            $('#totalServedAmount').text('0');
-                        }
-
                         // Clear DataTable
                         table.clear();
 
@@ -357,7 +342,6 @@
                     },
                     error: function (xhr) {
                         console.error("Error fetching filtered data:", xhr);
-                        $('#totalServedAmount').text('0');
                         $('#downloadReportWrapper').hide();
 
                         swal.fire({
